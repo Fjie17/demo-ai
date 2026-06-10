@@ -1,0 +1,9 @@
+node_modules/
+target/
+dist/
+build/
+.git/
+*.class
+*.jar
+playwright-report/
+test-results/

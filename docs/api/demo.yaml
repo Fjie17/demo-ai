@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Demo API
+  version: 1.0.0
+  description: Demo API for testing
+
+paths:
+  /api/v1/demo/login:
+    post:
+      operationId: demoLogin
+      summary: 用户登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      userInfo:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          username:
+                            type: string
+                          name:
+                            type: string
+
+  /api/v1/demo/userinfo:
+    get:
+      operationId: demoGetUserInfo
+      summary: 获取用户信息
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      name:
+                        type: string
+                      role:
+                        type: string
+
+  /api/v1/demo/logout:
+    post:
+      operationId: demoLogout
+      summary: 用户登出
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object

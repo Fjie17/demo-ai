@@ -1,0 +1,19 @@
+{
+  "name": "demo-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api-tests",
+    "test:e2e": "playwright test --project=e2e-chromium",
+    "test:all": "playwright test --project=api-tests --project=e2e-chromium",
+    "test:report": "playwright show-report playwright-report",
+    "test:debug": "PWDEBUG=1 playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/node": "^20.14.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.4.5"
+  }
+}

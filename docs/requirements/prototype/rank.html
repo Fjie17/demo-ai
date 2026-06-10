@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>段位维护</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fafbfc;
+      color: #333333;
+      font-size: 13px;
+    }
+
+    /* 页面容器 */
+    .page-container {
+      padding: 16px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 内容卡片 */
+    .content-card {
+      background: #ffffff;
+      border: 1px solid #dcdfe6;
+      border-radius: 5px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 卡片主体区域 */
+    .card-main {
+      padding: 0 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 区块标题行 */
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333333;
+      padding: 15px 0 0 0;
+    }
+
+    /* 操作栏 */
+    .toolbar {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    /* 按钮基础 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      padding: 0 15px;
+      border-radius: 3px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 200ms cubic-bezier(.23,1,.32,1);
+    }
+    .btn-primary {
+      background: #094194;
+      color: #ffffff;
+      border-color: #094194;
+    }
+    .btn-primary:hover {
+      background: #0064c1;
+      border-color: #0064c1;
+    }
+    .btn-default {
+      background: #ffffff;
+      color: #666666;
+      border: 1px solid #dcdfe6;
+    }
+    .btn-default:hover {
+      background: #f6f7fb;
+      color: #333333;
+      border-color: #cdd0d6;
+    }
+    .btn-danger {
+      background: #fa5e45;
+      color: #ffffff;
+      border-color: #fa5e45;
+    }
+    .btn-danger:hover {
+      background: #ed523a;
+      border-color: #ed523a;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 表格容器 */
+    .table-wrapper {
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* 数据表格 */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #ebeef5;
+      table-layout: fixed;
+    }
+    .data-table th {
+      background: #f1f2f7;
+      color: #666666;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 1px solid #ebeef5;
+      line-height: 18px;
+    }
+    .data-table td {
+      color: #666666;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 7px 10px;
+      border-bottom: 1px solid #ebeef5;
+      line-height: 18px;
+    }
+    .data-table tbody tr:hover {
+      background: #f5f7fa;
+    }
+    .data-table .col-icon { width: 80px; text-align: center; }
+    .data-table .col-name { width: 160px; }
+    .data-table .col-range { width: 200px; }
+    .data-table .col-count { width: 140px; text-align: center; }
+    .data-table .col-action { width: 160px; text-align: center; }
+
+    /* 操作链接 */
+    .action-link {
+      color: #094194;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 13px;
+      margin-right: 12px;
+      transition: color 200ms;
+    }
+    .action-link:hover {
+      color: #0064c1;
+    }
+    .action-link:last-child {
+      margin-right: 0;
+    }
+
+    /* 段位颜色标签 */
+    .rank-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .rank-tag.king { background: #fff3d8; color: #d48806; }
+    .rank-tag.diamond { background: #e5f2f9; color: #094194; }
+    .rank-tag.star { background: #f0e6f6; color: #7b2d8e; }
+    .rank-tag.platinum { background: #e9f8f7; color: #0e7a6e; }
+    .rank-tag.gold { background: #fff9ec; color: #ad6800; }
+    .rank-tag.silver { background: #f5f7fa; color: #666666; }
+    .rank-tag.bronze { background: #ffefec; color: #c84b37; }
+
+    .rank-icon {
+      font-size: 20px;
+      margin-right: 6px;
+    }
+
+    /* 分页 */
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0 15px 0;
+      flex-shrink: 0;
+    }
+    .pagination-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #666666;
+    }
+    .page-size-select {
+      width: 100px;
+      height: 28px;
+      border: none;
+      box-shadow: 0 0 0 1px #dcdfe6 inset;
+      border-radius: 3px;
+      padding: 4px 10px;
+      font-size: 14px;
+      color: #333333;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .page-size-select:focus {
+      box-shadow: 0 0 0 1px #094194 inset;
+      outline: none;
+    }
+    .pagination-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #666666;
+    }
+    .page-btn {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #dcdfe6;
+      border-radius: 3px;
+      background: #f7f8fb;
+      color: #666666;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 200ms;
+    }
+    .page-btn:hover:not(.disabled):not(.active) {
+      color: #094194;
+      border-color: #094194;
+    }
+    .page-btn.active {
+      background: #094194;
+      color: #ffffff;
+      border-color: #094194;
+    }
+    .page-btn.disabled {
+      color: rgba(102,102,102,.5);
+      background: rgba(247,248,251,.5);
+      cursor: not-allowed;
+    }
+    .page-jump {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+    }
+    .page-jump input {
+      width: 40px;
+      height: 28px;
+      text-align: center;
+      border: none;
+      box-shadow: 0 0 0 1px #dcdfe6 inset;
+      border-radius: 3px;
+      font-size: 13px;
+      color: #333333;
+      outline: none;
+    }
+    .page-jump input:focus {
+      box-shadow: 0 0 0 1px #094194 inset;
+    }
+
+    /* 弹窗遮罩 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 300ms cubic-bezier(.645,.045,.355,1);
+    }
+    .modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 弹窗 */
+    .modal {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 10px 12px 32px 4px rgba(0,0,0,.04), 0px 8px 20px rgba(0,0,0,.08);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(-20px);
+      transition: transform 300ms cubic-bezier(.645,.045,.355,1);
+    }
+    .modal-overlay.visible .modal {
+      transform: translateY(0);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 20px;
+      padding-bottom: 15px;
+      padding-left: 20px;
+      padding-right: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #303133;
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f5f5f5;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #666666;
+      transition: background 200ms;
+    }
+    .modal-close:hover {
+      background: #eeeeee;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 0 20px 20px 20px;
+    }
+
+    /* 表单 */
+    .form-item {
+      margin-bottom: 16px;
+    }
+    .form-item:last-child {
+      margin-bottom: 0;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333333;
+      margin-bottom: 6px;
+    }
+    .form-label .required {
+      color: #fa5e45;
+      margin-right: 2px;
+    }
+    .form-input {
+      width: 100%;
+      height: 28px;
+      border: none;
+      box-shadow: 0 0 0 1px #dcdfe6 inset;
+      border-radius: 3px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: #333333;
+      outline: none;
+      transition: box-shadow 200ms;
+      background: #ffffff;
+    }
+    .form-input:focus {
+      box-shadow: 0 0 0 1px #094194 inset;
+    }
+    .form-input.error {
+      box-shadow: 0 0 0 1px #fa5e45 inset;
+    }
+    .form-input.required-bg {
+      background: #fef7de;
+    }
+    .form-error {
+      font-size: 12px;
+      color: #fa5e45;
+      margin-top: 4px;
+      display: none;
+    }
+    .form-error.visible {
+      display: block;
+    }
+    .form-input::placeholder {
+      color: #a8abb2;
+    }
+
+    /* Emoji 选择器 */
+    .emoji-picker {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid #dcdfe6;
+      border-radius: 3px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .emoji-item {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 200ms;
+    }
+    .emoji-item:hover {
+      background: #f5f7fa;
+    }
+    .emoji-item.selected {
+      border-color: #094194;
+      background: #e5f2f9;
+    }
+
+    /* 删除确认弹窗 */
+    .confirm-modal {
+      width: 420px;
+    }
+    .confirm-body {
+      font-size: 14px;
+      color: #333333;
+      line-height: 1.6;
+    }
+    .confirm-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .confirm-icon {
+      font-size: 20px;
+      color: #ffc23e;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* 新增/编辑弹窗 */
+    .form-modal {
+      width: 520px;
+    }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      padding: 8px 15px;
+      border-radius: 3px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 2000;
+      transition: transform 300ms cubic-bezier(.23,1,.32,1);
+    }
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success {
+      background: #e9f8f7;
+      border: 1px solid #d2f2ef;
+      color: #1ebcaf;
+    }
+    .toast.error {
+      background: #ffefec;
+      border: 1px solid #fedfda;
+      color: #fa5e45;
+    }
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    /* 空数据 */
+    .empty-data {
+      text-align: center;
+      padding: 40px 0;
+      color: #999999;
+      font-size: 13px;
+    }
+
+    /* 区间连续性提示 */
+    .range-hint {
+      font-size: 12px;
+      color: #1ebcaf;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .range-hint.warning {
+      color: #ffc23e;
+    }
+
+    /* 段位人数 */
+    .count-cell {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="content-card">
+      <div class="card-main">
+        <!-- 标题行 -->
+        <div class="section-title">段位维护列表</div>
+
+        <!-- 操作栏 -->
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openAddModal()">新增段位</button>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-icon">段位图标</th>
+                <th class="col-name">段位名称</th>
+                <th class="col-range">积分区间</th>
+                <th class="col-count">当前段位人数</th>
+                <th class="col-action">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- 预置示例数据，按积分下限降序排列 -->
+              <tr data-id="1">
+                <td class="col-icon"><span class="rank-icon">👑</span></td>
+                <td class="col-name"><span class="rank-tag king">王者</span></td>
+                <td class="col-range">10,000 - 99,999</td>
+                <td class="col-count count-cell">3</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="2">
+                <td class="col-icon"><span class="rank-icon">💎</span></td>
+                <td class="col-name"><span class="rank-tag diamond">钻石</span></td>
+                <td class="col-range">5,000 - 9,999</td>
+                <td class="col-count count-cell">15</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="3">
+                <td class="col-icon"><span class="rank-icon">🌟</span></td>
+                <td class="col-name"><span class="rank-tag star">星耀</span></td>
+                <td class="col-range">3,000 - 4,999</td>
+                <td class="col-count count-cell">28</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="4">
+                <td class="col-icon"><span class="rank-icon">🥇</span></td>
+                <td class="col-name"><span class="rank-tag platinum">铂金</span></td>
+                <td class="col-range">1,500 - 2,999</td>
+                <td class="col-count count-cell">45</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="5">
+                <td class="col-icon"><span class="rank-icon">🥈</span></td>
+                <td class="col-name"><span class="rank-tag gold">黄金</span></td>
+                <td class="col-range">800 - 1,499</td>
+                <td class="col-count count-cell">120</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="6">
+                <td class="col-icon"><span class="rank-icon">🥉</span></td>
+                <td class="col-name"><span class="rank-tag silver">白银</span></td>
+                <td class="col-range">300 - 799</td>
+                <td class="col-count count-cell">256</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+              <tr data-id="7">
+                <td class="col-icon"><span class="rank-icon">⚔️</span></td>
+                <td class="col-name"><span class="rank-tag bronze">青铜</span></td>
+                <td class="col-range">0 - 299</td>
+                <td class="col-count count-cell">580</td>
+                <td class="col-action">
+                  <a class="action-link" onclick="openEditModal(this)">编辑</a>
+                  <a class="action-link" onclick="openDeleteConfirm(this)">删除</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination-bar">
+          <div class="pagination-left">
+            <span>共 7 条</span>
+            <span>每页</span>
+            <select class="page-size-select">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span>条</span>
+          </div>
+          <div class="pagination-right">
+            <button class="page-btn disabled" title="上一页">‹</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn disabled" title="下一页">›</button>
+            <div class="page-jump">
+              <span>前往</span>
+              <input type="number" min="1" value="1">
+              <span>页</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑弹窗 -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal form-modal">
+      <div class="modal-header">
+        <span class="modal-title" id="formModalTitle">新增段位</span>
+        <button class="modal-close" onclick="closeFormModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- 段位图标选择器 -->
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>段位图标</label>
+          <div class="emoji-picker" id="emojiPicker">
+            <div class="emoji-item" data-emoji="👑" onclick="selectEmoji(this)">👑</div>
+            <div class="emoji-item" data-emoji="💎" onclick="selectEmoji(this)">💎</div>
+            <div class="emoji-item" data-emoji="🌟" onclick="selectEmoji(this)">🌟</div>
+            <div class="emoji-item" data-emoji="🥇" onclick="selectEmoji(this)">🥇</div>
+            <div class="emoji-item" data-emoji="🥈" onclick="selectEmoji(this)">🥈</div>
+            <div class="emoji-item" data-emoji="🥉" onclick="selectEmoji(this)">🥉</div>
+            <div class="emoji-item" data-emoji="⚔️" onclick="selectEmoji(this)">⚔️</div>
+            <div class="emoji-item" data-emoji="🛡️" onclick="selectEmoji(this)">🛡️</div>
+            <div class="emoji-item" data-emoji="🎯" onclick="selectEmoji(this)">🎯</div>
+            <div class="emoji-item" data-emoji="🔥" onclick="selectEmoji(this)">🔥</div>
+            <div class="emoji-item" data-emoji="⭐" onclick="selectEmoji(this)">⭐</div>
+            <div class="emoji-item" data-emoji="🏆" onclick="selectEmoji(this)">🏆</div>
+            <div class="emoji-item" data-emoji="🎖️" onclick="selectEmoji(this)">🎖️</div>
+            <div class="emoji-item" data-emoji="🏅" onclick="selectEmoji(this)">🏅</div>
+            <div class="emoji-item" data-emoji="🔱" onclick="selectEmoji(this)">🔱</div>
+            <div class="emoji-item" data-emoji="💫" onclick="selectEmoji(this)">💫</div>
+          </div>
+          <div class="form-error" id="emojiError">请选择段位图标</div>
+        </div>
+
+        <!-- 段位名称 -->
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>段位名称</label>
+          <input type="text" class="form-input required-bg" id="rankName" placeholder="请输入段位名称" maxlength="20">
+          <div class="form-error" id="nameError">请输入段位名称</div>
+        </div>
+
+        <!-- 积分下限 -->
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>积分下限</label>
+          <input type="number" class="form-input required-bg" id="scoreMin" placeholder="请输入积分下限" min="0">
+          <div class="form-error" id="scoreMinError">请输入有效的积分下限</div>
+        </div>
+
+        <!-- 积分上限 -->
+        <div class="form-item">
+          <label class="form-label"><span class="required">*</span>积分上限</label>
+          <input type="number" class="form-input required-bg" id="scoreMax" placeholder="请输入积分上限">
+          <div class="form-error" id="scoreMaxError">请输入有效的积分上限</div>
+          <div class="range-hint" id="rangeHint" style="display: none;">
+            <span>💡</span>
+            <span id="rangeHintText"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeFormModal()">取消</button>
+        <button class="btn btn-primary" onclick="submitForm()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal confirm-modal">
+      <div class="modal-header">
+        <span class="modal-title">确认删除</span>
+        <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-body">
+          <div class="confirm-warning">
+            <span class="confirm-icon">⚠</span>
+            <div id="deleteMessage">
+              确定要删除段位「<strong id="deleteRankName"></strong>」吗？该段位下当前有 <strong id="deleteRankCount"></strong> 名关联成员，删除后相关成员将受影响。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toastIcon"></span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script>
+    // 状态管理
+    let selectedEmoji = '';
+    let editingRow = null;
+    let deletingRow = null;
+
+    // 示例数据
+    const rankData = [
+      { id: 1, icon: '👑', name: '王者', min: 10000, max: 99999, count: 3 },
+      { id: 2, icon: '💎', name: '钻石', min: 5000, max: 9999, count: 15 },
+      { id: 3, icon: '🌟', name: '星耀', min: 3000, max: 4999, count: 28 },
+      { id: 4, icon: '🥇', name: '铂金', min: 1500, max: 2999, count: 45 },
+      { id: 5, icon: '🥈', name: '黄金', min: 800, max: 1499, count: 120 },
+      { id: 6, icon: '🥉', name: '白银', min: 300, max: 799, count: 256 },
+      { id: 7, icon: '⚔️', name: '青铜', min: 0, max: 299, count: 580 },
+    ];
+
+    // 段位对应的CSS类
+    function getRankClass(name) {
+      const map = {
+        '王者': 'king', '钻石': 'diamond', '星耀': 'star',
+        '铂金': 'platinum', '黄金': 'gold', '白银': 'silver', '青铜': 'bronze'
+      };
+      return map[name] || '';
+    }
+
+    // 格式化数字
+    function formatNumber(n) {
+      return n.toLocaleString();
+    }
+
+    // 新增弹窗
+    function openAddModal() {
+      editingRow = null;
+      document.getElementById('formModalTitle').textContent = '新增段位';
+      clearForm();
+      document.getElementById('formModal').classList.add('visible');
+    }
+
+    // 编辑弹窗
+    function openEditModal(el) {
+      const row = el.closest('tr');
+      const id = parseInt(row.dataset.id);
+      const data = rankData.find(r => r.id === id);
+      editingRow = data;
+
+      document.getElementById('formModalTitle').textContent = '编辑段位';
+      document.getElementById('rankName').value = data.name;
+      document.getElementById('scoreMin').value = data.min;
+      document.getElementById('scoreMax').value = data.max;
+
+      // 回填图标
+      selectedEmoji = data.icon;
+      document.querySelectorAll('.emoji-item').forEach(item => {
+        item.classList.toggle('selected', item.dataset.emoji === data.icon);
+      });
+
+      clearErrors();
+      checkRangeContinuity();
+      document.getElementById('formModal').classList.add('visible');
+    }
+
+    // 关闭表单弹窗
+    function closeFormModal() {
+      document.getElementById('formModal').classList.remove('visible');
+      clearForm();
+    }
+
+    // 清空表单
+    function clearForm() {
+      document.getElementById('rankName').value = '';
+      document.getElementById('scoreMin').value = '';
+      document.getElementById('scoreMax').value = '';
+      selectedEmoji = '';
+      document.querySelectorAll('.emoji-item').forEach(item => item.classList.remove('selected'));
+      clearErrors();
+      document.getElementById('rangeHint').style.display = 'none';
+    }
+
+    // 清空错误
+    function clearErrors() {
+      document.querySelectorAll('.form-error').forEach(e => e.classList.remove('visible'));
+      document.querySelectorAll('.form-input').forEach(e => e.classList.remove('error'));
+    }
+
+    // 选择 Emoji
+    function selectEmoji(el) {
+      document.querySelectorAll('.emoji-item').forEach(item => item.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedEmoji = el.dataset.emoji;
+      document.getElementById('emojiError').classList.remove('visible');
+    }
+
+    // 检查区间连续性
+    function checkRangeContinuity() {
+      const min = parseInt(document.getElementById('scoreMin').value);
+      const max = parseInt(document.getElementById('scoreMax').value);
+      const hint = document.getElementById('rangeHint');
+      const hintText = document.getElementById('rangeHintText');
+
+      if (isNaN(min) || isNaN(max)) {
+        hint.style.display = 'none';
+        return;
+      }
+
+      // 检查是否与已有段位连续
+      const otherRanks = editingRow
+        ? rankData.filter(r => r.id !== editingRow.id)
+        : rankData;
+
+      const isContinuous = otherRanks.some(r => r.max === min - 1 || r.min === max + 1);
+      const hasGap = otherRanks.some(r => r.max < min - 1 && r.min > max + 1);
+
+      if (isContinuous) {
+        hint.style.display = 'flex';
+        hint.classList.remove('warning');
+        hintText.textContent = '区间与相邻段位连续，无需调整';
+      } else if (hasGap) {
+        hint.style.display = 'flex';
+        hint.classList.add('warning');
+        hintText.textContent = '区间与相邻段位存在间隙，建议补充中间段位';
+      } else {
+        hint.style.display = 'none';
+      }
+    }
+
+    // 表单提交
+    function submitForm() {
+      clearErrors();
+      let valid = true;
+
+      const name = document.getElementById('rankName').value.trim();
+      const min = document.getElementById('scoreMin').value;
+      const max = document.getElementById('scoreMax').value;
+
+      // 图标校验
+      if (!selectedEmoji) {
+        document.getElementById('emojiError').classList.add('visible');
+        valid = false;
+      }
+
+      // 名称校验
+      if (!name) {
+        document.getElementById('nameError').textContent = '请输入段位名称';
+        document.getElementById('nameError').classList.add('visible');
+        document.getElementById('rankName').classList.add('error');
+        valid = false;
+      } else {
+        const duplicate = rankData.find(r => r.name === name && (!editingRow || r.id !== editingRow.id));
+        if (duplicate) {
+          document.getElementById('nameError').textContent = '段位名称已存在，请更换';
+          document.getElementById('nameError').classList.add('visible');
+          document.getElementById('rankName').classList.add('error');
+          valid = false;
+        }
+      }
+
+      // 积分下限校验
+      if (min === '' || isNaN(parseInt(min))) {
+        document.getElementById('scoreMinError').textContent = '请输入有效的积分下限';
+        document.getElementById('scoreMinError').classList.add('visible');
+        document.getElementById('scoreMin').classList.add('error');
+        valid = false;
+      } else if (parseInt(min) < 0) {
+        document.getElementById('scoreMinError').textContent = '积分下限不能小于0';
+        document.getElementById('scoreMinError').classList.add('visible');
+        document.getElementById('scoreMin').classList.add('error');
+        valid = false;
+      }
+
+      // 积分上限校验
+      if (max === '' || isNaN(parseInt(max))) {
+        document.getElementById('scoreMaxError').textContent = '请输入有效的积分上限';
+        document.getElementById('scoreMaxError').classList.add('visible');
+        document.getElementById('scoreMax').classList.add('error');
+        valid = false;
+      } else if (parseInt(max) <= parseInt(min)) {
+        document.getElementById('scoreMaxError').textContent = '积分上限必须大于下限';
+        document.getElementById('scoreMaxError').classList.add('visible');
+        document.getElementById('scoreMax').classList.add('error');
+        valid = false;
+      }
+
+      // 区间重叠校验
+      if (valid) {
+        const minVal = parseInt(min);
+        const maxVal = parseInt(max);
+        const otherRanks = editingRow
+          ? rankData.filter(r => r.id !== editingRow.id)
+          : rankData;
+
+        const overlap = otherRanks.find(r =>
+          (minVal >= r.min && minVal <= r.max) ||
+          (maxVal >= r.min && maxVal <= r.max) ||
+          (minVal <= r.min && maxVal >= r.max)
+        );
+
+        if (overlap) {
+          document.getElementById('scoreMaxError').textContent = `积分区间与「${overlap.name}」重叠，请调整`;
+          document.getElementById('scoreMaxError').classList.add('visible');
+          document.getElementById('scoreMax').classList.add('error');
+          valid = false;
+        }
+      }
+
+      if (valid) {
+        closeFormModal();
+        showToast('success', editingRow ? '编辑成功' : '新增成功');
+      }
+    }
+
+    // 删除确认弹窗
+    function openDeleteConfirm(el) {
+      const row = el.closest('tr');
+      const id = parseInt(row.dataset.id);
+      deletingRow = rankData.find(r => r.id === id);
+
+      const nameEl = document.getElementById('deleteRankName');
+      const countEl = document.getElementById('deleteRankCount');
+      const msgEl = document.getElementById('deleteMessage');
+
+      nameEl.textContent = deletingRow.name;
+
+      if (deletingRow.count > 0) {
+        countEl.textContent = deletingRow.count;
+        msgEl.innerHTML = `确定要删除段位「<strong>${deletingRow.name}</strong>」吗？该段位下当前有 <strong>${deletingRow.count}</strong> 名关联成员，删除后相关成员将受影响。`;
+      } else {
+        msgEl.innerHTML = `确定要删除段位「<strong>${deletingRow.name}</strong>」吗？此操作不可撤销。`;
+      }
+
+      document.getElementById('deleteModal').classList.add('visible');
+    }
+
+    // 关闭删除弹窗
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('visible');
+      deletingRow = null;
+    }
+
+    // 确认删除
+    function confirmDelete() {
+      closeDeleteModal();
+      showToast('success', '删除成功');
+    }
+
+    // Toast 提示
+    function showToast(type, message) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toastIcon');
+      const msg = document.getElementById('toastMessage');
+
+      toast.className = 'toast ' + type;
+      icon.textContent = type === 'success' ? '✓' : '✕';
+      msg.textContent = message;
+
+      toast.classList.add('visible');
+      setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 3000);
+    }
+
+    // 输入监听 - 积分区间连续性检查
+    document.getElementById('scoreMin').addEventListener('input', checkRangeContinuity);
+    document.getElementById('scoreMax').addEventListener('input', checkRangeContinuity);
+  </script>
+</body>
+</html>
